@@ -34,6 +34,15 @@ export class AppComponent {
   }
 
 
+  takeInsurance(): void {
+    this.game.takeInsurance();
+  }
+
+  declineInsurance(): void {
+    this.game.declineInsurance();
+  }
+
+
   stand(): void {
     this.game.stand();
   }
@@ -47,14 +56,19 @@ export class AppComponent {
   }
 
   changeBet(delta: number): void {
-    if (this.game.phase !== 'playing') {
-      this.game.bet = Math.max(
-        1,
-        Math.min(this.game.balance, this.game.bet + delta)
-      );
+    if (
+      this.game.phase !== 'betting' &&
+      this.game.phase !== 'finished'
+    ) {
+      return;
     }
-  }
 
+    this.game.bet = Math.max(
+      1,
+      Math.min(this.game.balance, this.game.bet + delta)
+    );
+  }
+  
   hint(): string {
     if (this.game.phase !== 'playing') {
       return 'Starte eine Runde für deinen Hinweis.';

@@ -1,7 +1,7 @@
 export type Suit = '♠' | '♥' | '♦' | '♣';
 export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
 export interface Card { suit: Suit; rank: Rank; }
-export type Phase = 'betting' | 'playing' | 'dealer' | 'finished';
+export type Phase = 'betting' | 'insurance' | 'playing' | 'dealer' | 'finished';
 export type Result = 'win' | 'lose' | 'push' | 'blackjack' | null;
 export interface PlayerHand {
   cards: Card[];
@@ -49,10 +49,13 @@ export class BlackjackEngine {
   balance = 1000;
   bet = 20;
   message = 'Wähle deinen Einsatz und starte eine Runde.';
+  insuranceBet = 0;
+  insuranceResult: 'won' | 'lost' | null = null;
 
-  // Kompatibilität mit bestehenden Templates und dem Training-Hinweis.
   get player(): Card[] { return this.hands[this.activeHandIndex]?.cards ?? []; }
   get activeHand(): PlayerHand | undefined { return this.hands[this.activeHandIndex]; }
+  get insuranceCost(): number { return this.bet / 2; }
+  get canInsure(): boolean { return this.phase === 'insurance' && this.balance >= this.insuranceCost; }
   get canDouble(): boolean {
     const hand = this.activeHand;
     return this.phase === 'playing' && !!hand && !hand.finished &&
@@ -80,9 +83,49 @@ export class BlackjackEngine {
     this.activeHandIndex = 0;
     this.dealer = [this.draw(), this.draw()];
     this.result = null;
-    this.phase = 'playing';
-    this.message = 'Hit, Stand, Double oder Split?';
-    if (score(this.player).total === 21 || score(this.dealer).total === 21) this.settle();
+    this.insuranceBet = 0;
+    this.insuranceResult = null;
+    if (this.dealer[0].rank === 'A') {
+      this.phase = 'insurance';
+      this.message = `Dealer zeigt ein Ass. Versicherung für ${this.insuranceCost} Chips nehmen?`;
+      return;
+    }
+    this.checkInitialBlackjack();
+  }
+  takeInsurance(): void {
+    if (!this.canInsure) return;
+    this.insuranceBet = this.insuranceCost;
+    this.balance -= this.insuranceBet;
+    this.resolveInsurance();
+  }
+  declineInsurance(): void {
+    if (this.phase !== 'insurance') return;
+    this.resolveInsurance();
+  }
+  private resolveInsurance(): void {
+    const dealerBlackjack = this.isDealerBlackjack();
+    if (this.insuranceBet > 0) {
+      this.insuranceResult = dealerBlackjack ? 'won' : 'lost';
+      if (dealerBlackjack) this.balance += 3 * this.insuranceBet;
+    }
+    this.checkInitialBlackjack();
+    if (this.insuranceResult) {
+      const info = this.insuranceResult === 'won'
+        ? `Versicherung gewonnen (+${2 * this.insuranceBet} netto).`
+        : `Versicherung verloren (−${this.insuranceBet}).`;
+      this.message = `${info} ${this.message}`;
+    }
+  }
+  private isDealerBlackjack(): boolean {
+    return this.dealer.length === 2 && score(this.dealer).total === 21;
+  }
+  private checkInitialBlackjack(): void {
+    if (score(this.player).total === 21 || this.isDealerBlackjack()) {
+      this.settle();
+    } else {
+      this.phase = 'playing';
+      this.message = 'Hit, Stand, Double oder Split?';
+    }
   }
   hit(): void {
     const hand = this.activeHand;
@@ -135,7 +178,6 @@ export class BlackjackEngine {
       return;
     }
     this.phase = 'dealer';
-    // Kein Dealer-Ziehen, wenn sämtliche Hände über 21 sind.
     if (this.hands.some(h => score(h.cards).total <= 21)) {
       while (score(this.dealer).total < 17) this.dealer.push(this.draw());
     }
@@ -143,7 +185,7 @@ export class BlackjackEngine {
   }
   private settle(): void {
     const d = score(this.dealer).total;
-    const dealerBlackjack = this.dealer.length === 2 && d === 21;
+    const dealerBlackjack = this.isDealerBlackjack();
     for (const hand of this.hands) {
       const p = score(hand.cards).total;
       const natural = !hand.fromSplit && hand.cards.length === 2 && p === 21;
@@ -167,7 +209,7 @@ export class BlackjackEngine {
       : this.hands.map((h, i) => `Hand ${i + 1}: ${h.result}`).join(' · ');
   }
   resetBankroll(): void {
-    if (this.phase === 'playing' || this.phase === 'dealer') return;
+    if (this.phase === 'playing' || this.phase === 'dealer' || this.phase === 'insurance') return;
     this.balance = 1000;
     this.bet = 20;
     this.phase = 'betting';
@@ -175,6 +217,8 @@ export class BlackjackEngine {
     this.activeHandIndex = 0;
     this.dealer = [];
     this.result = null;
+    this.insuranceBet = 0;
+    this.insuranceResult = null;
     this.message = 'Neues Guthaben: 1.000 Chips.';
   }
 }

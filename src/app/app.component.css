@@ -1,37 +1,110 @@
-
 .player-hands {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 24px;
-  width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    width: 100%;
 }
 
 .player-hands .hand {
-  min-width: 180px;
-  padding: 12px;
-  border: 2px solid transparent;
-  border-radius: 16px;
+    min-width: 180px;
+    padding: 12px;
+    border: 2px solid transparent;
+    border-radius: 16px;
 }
 
 .player-hands .active-hand {
-  border-color: #d4af37;
-  background: rgba(212, 175, 55, 0.08);
+    border-color: #d4af37;
+    background: rgba(212, 175, 55, 0.08);
 }
 
 .hand-info {
-  margin-top: 10px;
-  text-align: center;
-  color: #e8d9a8;
-  font-size: 13px;
+    margin-top: 10px;
+    text-align: center;
+    color: #e8d9a8;
+    font-size: 13px;
 }
 
 @media (max-width: 600px) {
-  .player-hands {
-    gap: 8px;
-  }
+    .player-hands {
+        gap: 8px;
+    }
 
-  .player-hands .hand {
-    min-width: 140px;
-  }
+    .player-hands .hand {
+        min-width: 140px;
+    }
+}
+
+
+.insurance-panel {
+    max-width: 480px;
+    margin: 16px auto;
+    padding: 20px;
+    text-align: center;
+    background: #173c32;
+    border: 1px solid #d4af37;
+    border-radius: 16px;
+    color: #fff;
+}
+
+.insurance-panel h3 {
+    color: #d4af37;
+    letter-spacing: 2px;
+}
+
+.insurance-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* Verdeckte Dealer-Karte */
+.card.hidden {
+    background: repeating-linear-gradient(45deg,
+            #173c65 0px,
+            #173c65 8px,
+            #245482 8px,
+            #245482 16px) !important;
+
+    color: #f5d58b !important;
+    border: 3px solid #d4af37 !important;
+
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.insurance-actions button {
+    min-height: 46px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 1px solid #d4af37;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.insurance-actions button:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.insurance-actions button.gold {
+    background: linear-gradient(135deg,
+            #f5d58b,
+            #d59a2c);
+    color: #17212b;
+}
+
+.insurance-actions button:not(.gold) {
+    background: #243c38;
+    color: white;
+}
+
+.insurance-actions button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
