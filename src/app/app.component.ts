@@ -15,7 +15,17 @@ import { BlackjackEngine, Card, score } from './game.engine';
           <div class="cards"><div class="card" *ngFor="let c of game.player" [class.red]="red(c)">{{c.rank}}{{c.suit}}</div></div></div>
       </section>
       <section class="controls"><div class="betrow"><label>Einsatz</label><button (click)="changeBet(-10)" [disabled]="game.phase==='playing'">−</button><strong>{{game.bet}} ●</strong><button (click)="changeBet(10)" [disabled]="game.phase==='playing'">+</button></div>
-      <div class="actions"><button class="gold" (click)="start()" [disabled]="game.phase==='playing'">{{game.phase==='finished' ? 'NÄCHSTE RUNDE' : 'KARTEN GEBEN'}}</button><button (click)="hit()" [disabled]="game.phase!=='playing'">HIT</button><button (click)="stand()" [disabled]="game.phase!=='playing'">STAND</button></div>
+      <div class="actions"> <button class="gold" (click)="start()" [disabled]="game.phase==='playing'">{{game.phase==='finished' ? 'NÄCHSTE RUNDE' : 'KARTEN GEBEN'}}</button><button (click)="hit()" [disabled]="game.phase!=='playing'">HIT</button><button (click)="stand()" [disabled]="game.phase!=='playing'">STAND</button> <button
+  (click)="doubleDown()"
+  [disabled]="
+    game.phase !== 'playing' ||
+    game.player.length !== 2 ||
+    game.balance < game.bet
+  ">
+  DOUBLE
+</button></div> 
+
+
       <div class="foot"><span *ngIf="mode()==='training'">Training: {{hint()}}</span><span *ngIf="mode()==='casino'">6 Decks · S17 · Virtuelle Chips</span><button class="link" (click)="reset()">Guthaben zurücksetzen</button></div></section>
     </main>`,
   styles: [],
@@ -23,7 +33,7 @@ import { BlackjackEngine, Card, score } from './game.engine';
 })
 export class AppComponent {
   game = new BlackjackEngine();
-  mode = signal<'casino'|'training'>('casino');
+  mode = signal<'casino' | 'training'>('casino');
   total = (cards: Card[]) => score(cards).total;
   red = (c: Card) => c.suit === '♥' || c.suit === '♦';
   start() { this.game.start(); }
@@ -35,7 +45,7 @@ export class AppComponent {
     if (this.game.phase !== 'playing') return 'Starte eine Runde für deinen Hinweis.';
     const p = score(this.game.player);
     const up = this.game.dealer[0];
-    const d = up.rank === 'A' ? 11 : ['J','Q','K'].includes(up.rank) ? 10 : Number(up.rank);
+    const d = up.rank === 'A' ? 11 : ['J', 'Q', 'K'].includes(up.rank) ? 10 : Number(up.rank);
     if (p.soft) return p.total <= 17 ? 'Hit (vereinfachter Hinweis)' : p.total >= 19 ? 'Stand' : d >= 9 ? 'Hit' : 'Stand';
     if (p.total <= 11) return 'Hit (Double folgt in Phase 2)';
     if (p.total >= 17) return 'Stand';
@@ -43,5 +53,11 @@ export class AppComponent {
     if (p.total === 12 && d >= 4 && d <= 6) return 'Stand';
     return 'Hit';
   }
+
+
+  doubleDown() {
+    this.game.doubleDown();
+  }
+
 }
 import { CommonModule, DecimalPipe } from '@angular/common';

@@ -86,4 +86,38 @@ export class BlackjackEngine {
     this.player = []; this.dealer = []; this.result = null;
     this.message = 'Neues Guthaben: 1.000 Chips.';
   }
+
+
+  doubleDown(): void {
+    if (this.phase !== 'playing') return;
+
+    // Double nur bei den ersten beiden Karten.
+    if (this.player.length !== 2) {
+      this.message = 'Double ist nur mit zwei Karten möglich.';
+      return;
+    }
+
+    // Der Spieler muss den zusätzlichen Einsatz besitzen.
+    if (this.balance < this.bet) {
+      this.message = 'Nicht genügend Guthaben für Double.';
+      return;
+    }
+
+    this.balance -= this.bet;
+    this.bet *= 2;
+
+    // Genau eine weitere Karte ziehen.
+    this.player.push(this.draw());
+
+    // Nach Double darf der Spieler nicht erneut ziehen.
+    // Bei Bust wird die Runde direkt abgerechnet.
+    if (score(this.player).total > 21) {
+      this.settle();
+      return;
+    }
+
+    // Ansonsten ist der Dealer an der Reihe.
+    this.stand();
+  }
+
 }
