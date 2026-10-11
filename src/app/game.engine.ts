@@ -3,6 +3,15 @@ export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 
 export interface Card { suit: Suit; rank: Rank; }
 export type Phase = 'betting' | 'playing' | 'dealer' | 'finished';
 export type Result = 'win' | 'lose' | 'push' | 'blackjack' | null;
+export interface PlayerHand {
+  cards: Card[];
+  bet: number;
+  finished: boolean;
+  doubled: boolean;
+  fromSplit: boolean;
+  result: Result;
+  splitAces: boolean;
+}
 const SUITS: Suit[] = ['♠', '♥', '♦', '♣'];
 const RANKS: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 export function newShoe(decks = 6): Card[] {
@@ -21,103 +30,151 @@ export function score(cards: Card[]): { total: number; soft: boolean } {
     else if (['J', 'Q', 'K'].includes(card.rank)) total += 10;
     else total += Number(card.rank);
   }
-  let soft = false;
-  if (aces && total + 10 <= 21) { total += 10; soft = true; }
+  const soft = aces > 0 && total + 10 <= 21;
+  if (soft) total += 10;
   return { total, soft };
+}
+function pairValue(card: Card): number {
+  if (card.rank === 'A') return 11;
+  if (['10', 'J', 'Q', 'K'].includes(card.rank)) return 10;
+  return Number(card.rank);
 }
 export class BlackjackEngine {
   shoe = newShoe();
-  player: Card[] = [];
+  hands: PlayerHand[] = [];
+  activeHandIndex = 0;
   dealer: Card[] = [];
   phase: Phase = 'betting';
   result: Result = null;
   balance = 1000;
   bet = 20;
   message = 'Wähle deinen Einsatz und starte eine Runde.';
+
+  // Kompatibilität mit bestehenden Templates und dem Training-Hinweis.
+  get player(): Card[] { return this.hands[this.activeHandIndex]?.cards ?? []; }
+  get activeHand(): PlayerHand | undefined { return this.hands[this.activeHandIndex]; }
+  get canDouble(): boolean {
+    const hand = this.activeHand;
+    return this.phase === 'playing' && !!hand && !hand.finished &&
+      !hand.splitAces && hand.cards.length === 2 && this.balance >= hand.bet;
+  }
+  get canSplit(): boolean {
+    const hand = this.activeHand;
+    return this.phase === 'playing' && !!hand && !hand.finished &&
+      !hand.splitAces && hand.cards.length === 2 && this.hands.length < 4 &&
+      pairValue(hand.cards[0]) === pairValue(hand.cards[1]) && this.balance >= hand.bet;
+  }
   private draw(): Card {
     if (this.shoe.length === 0) this.shoe = newShoe();
     return this.shoe.pop()!;
+  }
+  private makeHand(cards: Card[], bet: number, fromSplit = false, splitAces = false): PlayerHand {
+    return { cards, bet, finished: false, doubled: false, fromSplit, splitAces, result: null };
   }
   start(): void {
     if (this.phase !== 'betting' && this.phase !== 'finished') return;
     if (this.bet < 1 || this.bet > this.balance) { this.message = 'Ungültiger Einsatz.'; return; }
     if (this.shoe.length < 52) this.shoe = newShoe();
     this.balance -= this.bet;
-    this.result = null;
-    this.player = [this.draw(), this.draw()];
+    this.hands = [this.makeHand([this.draw(), this.draw()], this.bet)];
+    this.activeHandIndex = 0;
     this.dealer = [this.draw(), this.draw()];
+    this.result = null;
     this.phase = 'playing';
-    this.message = 'Hit oder Stand?';
+    this.message = 'Hit, Stand, Double oder Split?';
     if (score(this.player).total === 21 || score(this.dealer).total === 21) this.settle();
   }
   hit(): void {
-    if (this.phase !== 'playing') return;
-    this.player.push(this.draw());
-    const total = score(this.player).total;
-    if (total > 21) this.settle();
-    else if (total === 21) this.stand();
+    const hand = this.activeHand;
+    if (this.phase !== 'playing' || !hand || hand.finished || hand.splitAces) return;
+    hand.cards.push(this.draw());
+    if (score(hand.cards).total >= 21) this.finishHand();
   }
   stand(): void {
-    if (this.phase !== 'playing') return;
+    if (this.phase !== 'playing' || !this.activeHand || this.activeHand.finished) return;
+    this.finishHand();
+  }
+  doubleDown(): void {
+    if (!this.canDouble) return;
+    const hand = this.activeHand!;
+    this.balance -= hand.bet;
+    hand.bet *= 2;
+    hand.doubled = true;
+    hand.cards.push(this.draw());
+    this.finishHand();
+  }
+  split(): void {
+    if (!this.canSplit) return;
+    const hand = this.activeHand!;
+    const second = hand.cards.pop()!;
+    const splitAces = hand.cards[0].rank === 'A';
+    this.balance -= hand.bet;
+    hand.fromSplit = true;
+    hand.splitAces = splitAces;
+    const nextHand = this.makeHand([second], hand.bet, true, splitAces);
+    hand.cards.push(this.draw());
+    nextHand.cards.push(this.draw());
+    this.hands.splice(this.activeHandIndex + 1, 0, nextHand);
+    if (splitAces) {
+      hand.finished = true;
+      nextHand.finished = true;
+      this.advance();
+    } else {
+      this.message = `Hand ${this.activeHandIndex + 1} von ${this.hands.length} spielen.`;
+    }
+  }
+  private finishHand(): void {
+    this.activeHand!.finished = true;
+    this.advance();
+  }
+  private advance(): void {
+    const next = this.hands.findIndex(h => !h.finished);
+    if (next >= 0) {
+      this.activeHandIndex = next;
+      this.message = `Hand ${next + 1} von ${this.hands.length} spielen.`;
+      return;
+    }
     this.phase = 'dealer';
-    while (score(this.dealer).total < 17) this.dealer.push(this.draw());
+    // Kein Dealer-Ziehen, wenn sämtliche Hände über 21 sind.
+    if (this.hands.some(h => score(h.cards).total <= 21)) {
+      while (score(this.dealer).total < 17) this.dealer.push(this.draw());
+    }
     this.settle();
   }
   private settle(): void {
-    const p = score(this.player).total;
     const d = score(this.dealer).total;
-    const pbj = this.player.length === 2 && p === 21;
-    const dbj = this.dealer.length === 2 && d === 21;
-    if ((pbj && dbj) || (p <= 21 && !pbj && !dbj && p === d)) this.result = 'push';
-    else if (pbj && !dbj) this.result = 'blackjack';
-    else if (p > 21 || dbj || (d <= 21 && d > p)) this.result = 'lose';
-    else this.result = 'win';
-    if (this.result === 'push') this.balance += this.bet;
-    if (this.result === 'win') this.balance += 2 * this.bet;
-    if (this.result === 'blackjack') this.balance += 2.5 * this.bet;
+    const dealerBlackjack = this.dealer.length === 2 && d === 21;
+    for (const hand of this.hands) {
+      const p = score(hand.cards).total;
+      const natural = !hand.fromSplit && hand.cards.length === 2 && p === 21;
+      let result: Exclude<Result, null>;
+      if (p > 21) result = 'lose';
+      else if (natural && dealerBlackjack) result = 'push';
+      else if (natural) result = 'blackjack';
+      else if (dealerBlackjack) result = 'lose';
+      else if (d > 21 || p > d) result = 'win';
+      else if (p === d) result = 'push';
+      else result = 'lose';
+      hand.result = result;
+      if (result === 'push') this.balance += hand.bet;
+      if (result === 'win') this.balance += 2 * hand.bet;
+      if (result === 'blackjack') this.balance += 2.5 * hand.bet;
+    }
+    this.result = this.hands.length === 1 ? this.hands[0].result : null;
     this.phase = 'finished';
-    this.message = ({ push: 'Unentschieden – Einsatz zurück.', win: 'Gewonnen!', lose: 'Dealer gewinnt.', blackjack: 'Blackjack! Auszahlung 3:2.' } as const)[this.result];
+    this.message = this.hands.length === 1
+      ? ({ push: 'Unentschieden – Einsatz zurück.', win: 'Gewonnen!', lose: 'Dealer gewinnt.', blackjack: 'Blackjack! Auszahlung 3:2.' } as const)[this.hands[0].result!]
+      : this.hands.map((h, i) => `Hand ${i + 1}: ${h.result}`).join(' · ');
   }
   resetBankroll(): void {
     if (this.phase === 'playing' || this.phase === 'dealer') return;
     this.balance = 1000;
     this.bet = 20;
     this.phase = 'betting';
-    this.player = []; this.dealer = []; this.result = null;
+    this.hands = [];
+    this.activeHandIndex = 0;
+    this.dealer = [];
+    this.result = null;
     this.message = 'Neues Guthaben: 1.000 Chips.';
   }
-
-
-  doubleDown(): void {
-    if (this.phase !== 'playing') return;
-
-    // Double nur bei den ersten beiden Karten.
-    if (this.player.length !== 2) {
-      this.message = 'Double ist nur mit zwei Karten möglich.';
-      return;
-    }
-
-    // Der Spieler muss den zusätzlichen Einsatz besitzen.
-    if (this.balance < this.bet) {
-      this.message = 'Nicht genügend Guthaben für Double.';
-      return;
-    }
-
-    this.balance -= this.bet;
-    this.bet *= 2;
-
-    // Genau eine weitere Karte ziehen.
-    this.player.push(this.draw());
-
-    // Nach Double darf der Spieler nicht erneut ziehen.
-    // Bei Bust wird die Runde direkt abgerechnet.
-    if (score(this.player).total > 21) {
-      this.settle();
-      return;
-    }
-
-    // Ansonsten ist der Dealer an der Reihe.
-    this.stand();
-  }
-
 }

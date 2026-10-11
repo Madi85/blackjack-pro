@@ -28,6 +28,12 @@ export class AppComponent {
     this.game.hit();
   }
 
+
+  split(): void {
+    this.game.split();
+  }
+
+
   stand(): void {
     this.game.stand();
   }
