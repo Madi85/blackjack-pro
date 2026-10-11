@@ -1,0 +1,174 @@
+
+<main class="shell">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      ♠ BLACKJACK <span>PRO</span>
+    </div>
+
+    <div class="bank">
+      Guthaben
+      <strong>{{ game.balance | number:'1.0-1' }} ●</strong>
+    </div>
+  </header>
+
+  <!-- SPIELMODUS -->
+  <nav>
+    <button
+      [class.selected]="mode() === 'casino'"
+      (click)="mode.set('casino')">
+      ♣ Casino
+    </button>
+
+    <button
+      [class.selected]="mode() === 'training'"
+      (click)="mode.set('training')">
+      ♙ Training
+    </button>
+  </nav>
+
+  <!-- CASINO TISCH -->
+  <section class="table">
+
+    <div class="table-label">
+      BLACKJACK PAYS 3 TO 2
+      <small>DEALER STANDS ON ALL 17</small>
+    </div>
+
+    <!-- DEALER -->
+    <div class="hand">
+      <div class="hand-title">
+        DEALER
+
+        <span *ngIf="game.dealer.length">
+          {{ game.phase === 'playing' ? '?' : total(game.dealer) }}
+        </span>
+      </div>
+
+      <div class="cards">
+        <div
+          class="card"
+          *ngFor="let card of game.dealer; let i = index"
+          [class.red]="red(card)"
+          [class.hidden]="i === 1 && game.phase === 'playing'">
+
+          {{
+            i === 1 && game.phase === 'playing'
+              ? '♠'
+              : card.rank + card.suit
+          }}
+        </div>
+      </div>
+    </div>
+
+    <!-- MITTE -->
+    <div class="center">
+      <div class="chip">{{ game.bet }}</div>
+      <div class="status">{{ game.message }}</div>
+    </div>
+
+    <!-- SPIELER -->
+    <div class="hand">
+      <div class="hand-title">
+        DU
+
+        <span *ngIf="game.player.length">
+          {{ total(game.player) }}
+        </span>
+      </div>
+
+      <div class="cards">
+        <div
+          class="card"
+          *ngFor="let card of game.player"
+          [class.red]="red(card)">
+
+          {{ card.rank }}{{ card.suit }}
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- SPIELSTEUERUNG -->
+  <section class="controls">
+
+    <div class="betrow">
+      <label>Einsatz</label>
+
+      <button
+        (click)="changeBet(-10)"
+        [disabled]="game.phase === 'playing'">
+        −
+      </button>
+
+      <strong>{{ game.bet }} ●</strong>
+
+      <button
+        (click)="changeBet(10)"
+        [disabled]="game.phase === 'playing'">
+        +
+      </button>
+    </div>
+
+    <div class="actions">
+
+      <button
+        class="gold"
+        (click)="start()"
+        [disabled]="game.phase === 'playing'">
+
+        {{
+          game.phase === 'finished'
+            ? 'NÄCHSTE RUNDE'
+            : 'KARTEN GEBEN'
+        }}
+      </button>
+
+      <button
+        (click)="hit()"
+        [disabled]="game.phase !== 'playing'">
+        HIT
+      </button>
+
+      <button
+        (click)="stand()"
+        [disabled]="game.phase !== 'playing'">
+        STAND
+      </button>
+
+      <button
+        (click)="doubleDown()"
+        [disabled]="
+          game.phase !== 'playing' ||
+          game.player.length !== 2 ||
+          game.balance < game.bet
+        ">
+        DOUBLE
+      </button>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="foot">
+
+      <span *ngIf="mode() === 'training'">
+        Training: {{ hint() }}
+      </span>
+
+      <span *ngIf="mode() === 'casino'">
+        6 Decks · S17 · Virtuelle Chips
+      </span>
+
+      <button
+        class="link"
+        (click)="reset()">
+        Guthaben zurücksetzen
+      </button>
+
+    </div>
+
+  </section>
+
+</main>
