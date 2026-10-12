@@ -494,7 +494,7 @@
     line-height: 1.4;
 }
 
-/* Spielerhand: Überschrift innerhalb des Rahmens halten */
+/* Spielerhand: Überschrift innerhalb des Rahmens halten dies muss dann weg */
 
 .table .player-hands>.hand {
     padding: 18px 12px 14px;
