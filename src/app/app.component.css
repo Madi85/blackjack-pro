@@ -1,110 +1,517 @@
-.player-hands {
+/* ============================================================
+   BLACKJACK PRO – KOMPONENTEN-STYLES
+   Bereinigt: keine doppelten Regeln oder Keyframes
+   ============================================================ */
+
+/* 1. KARTEN UND AUSTEILANIMATION */
+.table .hand .cards {
     display: flex;
+    flex-direction: row;
     justify-content: center;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 24px;
+    gap: 10px;
     width: 100%;
+    min-height: 116px;
 }
 
-.player-hands .hand {
-    min-width: 180px;
-    padding: 12px;
-    border: 2px solid transparent;
-    border-radius: 16px;
+.table .hand .cards .card {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    animation: blackjackDeal 0.45s ease-out both;
+    will-change: transform, opacity;
 }
 
-.player-hands .active-hand {
-    border-color: #d4af37;
-    background: rgba(212, 175, 55, 0.08);
-}
-
-.hand-info {
-    margin-top: 10px;
-    text-align: center;
-    color: #e8d9a8;
-    font-size: 13px;
-}
-
-@media (max-width: 600px) {
-    .player-hands {
-        gap: 8px;
+@keyframes blackjackDeal {
+    0% {
+        opacity: 0;
+        transform: translate(35px, -45px) rotate(8deg) scale(0.85);
     }
 
-    .player-hands .hand {
-        min-width: 140px;
+    65% {
+        opacity: 1;
+        transform: translate(0, 4px) rotate(-2deg) scale(1.02);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0) scale(1);
     }
 }
 
-
-.insurance-panel {
-    max-width: 480px;
-    margin: 16px auto;
-    padding: 20px;
-    text-align: center;
-    background: #173c32;
-    border: 1px solid #d4af37;
-    border-radius: 16px;
-    color: #fff;
-}
-
-.insurance-panel h3 {
-    color: #d4af37;
-    letter-spacing: 2px;
-}
-
-.insurance-actions {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-/* Verdeckte Dealer-Karte */
-.card.hidden {
-    background: repeating-linear-gradient(45deg,
-            #173c65 0px,
-            #173c65 8px,
-            #245482 8px,
-            #245482 16px) !important;
-
-    color: #f5d58b !important;
-    border: 3px solid #d4af37 !important;
-
+.table .hand .cards .card.hidden {
     display: flex !important;
     align-items: center;
     justify-content: center;
+    background: repeating-linear-gradient(45deg,
+            #173c65 0,
+            #173c65 8px,
+            #245482 8px,
+            #245482 16px) !important;
+    color: #f5d58b !important;
+    border: 3px solid #d4af37 !important;
+}
+
+/* 2. SPIELERHÄNDE UND SPLIT */
+.player-hands {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 24px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0 16px;
+    margin-top: 42px;
 }
 
 
-.insurance-actions button {
-    min-height: 46px;
-    padding: 12px 20px;
-    border-radius: 10px;
-    border: 1px solid #d4af37;
-    font-size: 14px;
+.table .player-hands>.hand {
+    flex: 0 1 auto;
+    width: max-content;
+    min-width: 260px;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+
+.table .player-hands .hand .cards {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    min-height: 116px;
+}
+
+.player-hands .active-hand {
+    border: 2px solid #d4af37;
+    border-radius: 12px;
+    background: rgba(212, 175, 55, 0.08);
+}
+
+/* 3. EINSATZWAHL / CASINO-CHIPS */
+.controls .betting-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 20px 10px;
+    box-sizing: border-box;
+}
+
+.controls .bet-label {
+    color: #d4af37;
+    font-size: 13px;
     font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.controls .bet-amount {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.controls .casino-chips {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+}
+
+.controls .casino-chips .casino-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    padding: 0;
+    border: 6px dashed #fff;
+    border-radius: 50%;
+    outline: 2px solid rgba(0, 0, 0, 0.3);
+    outline-offset: -10px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1;
     cursor: pointer;
-    transition: transform 0.15s ease;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4),
+        0 8px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.insurance-actions button:hover:not(:disabled) {
-    transform: translateY(-2px);
+.controls .casino-chips .casino-chip:hover:not(:disabled) {
+    transform: translateY(-5px);
 }
 
-.insurance-actions button.gold {
-    background: linear-gradient(135deg,
-            #f5d58b,
-            #d59a2c);
-    color: #17212b;
+.controls .casino-chips .casino-chip:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
 }
 
-.insurance-actions button:not(.gold) {
-    background: #243c38;
-    color: white;
-}
-
-.insurance-actions button:disabled {
-    opacity: 0.45;
+.controls .casino-chips .casino-chip:disabled {
+    opacity: 0.35;
     cursor: not-allowed;
+}
+
+.controls .casino-chips .chip-1 {
+    background: #e8e5dd;
+    color: #222;
+    border-color: #999;
+}
+
+.controls .casino-chips .chip-5 {
+    background: #c63b43;
+}
+
+.controls .casino-chips .chip-10 {
+    background: #286fba;
+}
+
+.controls .casino-chips .chip-25 {
+    background: #238f55;
+}
+
+.controls .casino-chips .chip-50 {
+    background: #252832;
+}
+
+.controls .casino-chips .chip-100 {
+    background: #8053ac;
+}
+
+.controls .clear-bet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    padding: 9px 18px;
+    background: transparent;
+    color: #d4af37;
+    border: 1px solid #9c8c62;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.controls .clear-bet:hover:not(:disabled) {
+    background: rgba(212, 175, 55, 0.12);
+}
+
+.controls button:disabled {
+    cursor: not-allowed;
+}
+
+/* 4. 3D-CHIP-TURM AUF DEM SPIELTISCH */
+.table-bet {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 0;
+    margin-bottom: 0;
+}
+
+.chip-tower {
+    position: relative;
+    width: 76px;
+    height: 60px;
+    perspective: 400px;
+}
+
+.tower-chip {
+    position: absolute;
+    left: 8px;
+    width: 60px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 5px dashed rgba(255, 255, 255, 0.9);
+    font-size: 15px;
+    font-weight: 900;
+    color: #fff;
+    transform: rotateX(48deg);
+    box-shadow: 0 8px 0 #242424,
+        0 10px 0 rgba(255, 255, 255, 0.35),
+        0 13px 7px rgba(0, 0, 0, 0.4);
+}
+
+.tower-chip span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.tower-chip-1 {
+    background: #e8e5dd;
+    color: #222;
+    border-color: #999;
+}
+
+.tower-chip-5 {
+    background: #c63b43;
+}
+
+.tower-chip-10 {
+    background: #286fba;
+}
+
+.tower-chip-25 {
+    background: #238f55;
+}
+
+.tower-chip-50 {
+    background: #252832;
+}
+
+.tower-chip-100 {
+    background: #8053ac;
+}
+
+.table-bet-total {
+    position: relative;
+    z-index: 2;
+    margin-top: 8px;
+    color: #f5d77b;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* 5. ERGEBNISSE */
+.result-win {
+    color: #62e6a0;
+}
+
+.result-lose {
+    color: #ff7777;
+}
+
+.result-push {
+    color: #f1d17a;
+}
+
+.result-blackjack {
+    color: #ffd95c;
+    text-shadow: 0 0 14px rgba(255, 217, 92, 0.45);
+}
+
+.result-mixed {
+    color: #f5f5f5;
+}
+
+.round-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 24px;
+    margin: 12px auto;
+    border: 2px solid #b99552;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    text-align: center;
+    animation: resultAppear 0.5s ease-out;
+}
+
+.result-title {
+    display: block;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+.result-amount {
+    font-size: 23px;
+    font-weight: 800;
+}
+
+.hand-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    text-align: center;
+    animation: resultAppear 0.5s ease-out;
+}
+
+.hand-result strong {
+    font-size: 17px;
+    letter-spacing: 1px;
+}
+
+.hand-result span {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+@keyframes resultAppear {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.92);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 6. RESPONSIVE DARSTELLUNG */
+@media (max-width: 600px) {
+    .table .hand .cards {
+        gap: 6px;
+        min-height: 100px;
+    }
+
+    .player-hands {
+        gap: 10px;
+        padding: 0 8px;
+        margin-top: 32px;
+    }
+
+    .player-hands>.hand {
+        flex: 1 1 0;
+        max-width: 50%;
+        padding: 8px 4px;
+    }
+
+    .player-hands .cards {
+        gap: 4px;
+    }
+
+    .controls .casino-chips {
+        gap: 8px;
+    }
+
+    .controls .casino-chips .casino-chip {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        font-size: 15px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .table .hand .cards .card,
+    .round-result,
+    .hand-result {
+        animation: none;
+    }
+}
+
+/* SPIELTISCH: CHIP-STAPEL UND SPIELERHÄNDE TRENNEN */
+
+.table .table-center {
+    position: relative;
+    inset: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+
+    transform: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: auto;
+    min-height: 0;
+
+    margin: 20px 0 35px;
+    padding: 0;
+
+    box-sizing: border-box;
+}
+
+.table .table-center .table-bet {
+    margin: 0;
+    padding: 0;
+}
+
+.table .table-center .chip-tower {
+    height: 65px;
+}
+
+.table .player-hands {
+    position: relative;
+    transform: none;
+
+    margin-top: 0;
+    margin-bottom: 24px;
+}
+
+
+/* Abstand zwischen Tischüberschrift und Dealer */
+
+.table .table-label {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 24px;
+}
+
+.table .table-label small {
+    display: block;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Spielerhand: Überschrift innerhalb des Rahmens halten */
+
+.table .player-hands>.hand {
+    padding: 18px 12px 14px;
+}
+
+.table .player-hands>.hand .hand-title {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    margin: 0 0 14px;
+    padding: 0;
 }

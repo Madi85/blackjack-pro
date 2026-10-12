@@ -146,43 +146,81 @@ export class BlackjackEngine {
     hand.cards.push(this.draw());
     this.finishHand();
   }
+
+
   split(): void {
     if (!this.canSplit) return;
+
     const hand = this.activeHand!;
     const second = hand.cards.pop()!;
     const splitAces = hand.cards[0].rank === 'A';
+
     this.balance -= hand.bet;
+
     hand.fromSplit = true;
     hand.splitAces = splitAces;
-    const nextHand = this.makeHand([second], hand.bet, true, splitAces);
-    hand.cards.push(this.draw());
-    nextHand.cards.push(this.draw());
+
+    // Zweite Hand entsteht zunächst mit nur einer Karte
+    const nextHand = this.makeHand(
+      [second],
+      hand.bet,
+      true,
+      splitAces
+    );
+
     this.hands.splice(this.activeHandIndex + 1, 0, nextHand);
+
+    // Nur HAND 1 bekommt jetzt ihre zweite Karte
+    hand.cards.push(this.draw());
+
     if (splitAces) {
+      // Bei geteilten Assen nur eine Zusatzkarte je Hand
       hand.finished = true;
+      nextHand.cards.push(this.draw());
       nextHand.finished = true;
       this.advance();
     } else {
-      this.message = `Hand ${this.activeHandIndex + 1} von ${this.hands.length} spielen.`;
+      this.message =
+        `Hand ${this.activeHandIndex + 1} von ${this.hands.length} spielen.`;
     }
   }
+
   private finishHand(): void {
     this.activeHand!.finished = true;
     this.advance();
   }
+
   private advance(): void {
     const next = this.hands.findIndex(h => !h.finished);
+
     if (next >= 0) {
       this.activeHandIndex = next;
-      this.message = `Hand ${next + 1} von ${this.hands.length} spielen.`;
+
+      const hand = this.hands[next];
+
+      // Die nächste Split-Hand erhält erst jetzt ihre zweite Karte
+      if (hand.fromSplit && hand.cards.length === 1) {
+        hand.cards.push(this.draw());
+      }
+
+      this.message =
+        `Hand ${next + 1} von ${this.hands.length} spielen.`;
+
       return;
     }
+
+    // Erst wenn alle Hände abgeschlossen sind, spielt der Dealer
     this.phase = 'dealer';
+
     if (this.hands.some(h => score(h.cards).total <= 21)) {
-      while (score(this.dealer).total < 17) this.dealer.push(this.draw());
+      while (score(this.dealer).total < 17) {
+        this.dealer.push(this.draw());
+      }
     }
+
     this.settle();
   }
+
   private settle(): void {
     const d = score(this.dealer).total;
     const dealerBlackjack = this.isDealerBlackjack();

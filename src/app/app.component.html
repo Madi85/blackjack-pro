@@ -14,11 +14,11 @@
 
     <!-- SPIELMODUS -->
     <nav>
-        <button [class.selected]="mode() === 'casino'" (click)="mode.set('casino')">
+        <button type="button" [class.selected]="mode() === 'casino'" (click)="mode.set('casino')">
             ♣ Casino
         </button>
 
-        <button [class.selected]="mode() === 'training'" (click)="mode.set('training')">
+        <button type="button" [class.selected]="mode() === 'training'" (click)="mode.set('training')">
             ♙ Training
         </button>
     </nav>
@@ -33,102 +33,223 @@
 
         <!-- DEALER -->
         <div class="hand">
+
             <div class="hand-title">
                 DEALER
 
-                <span *ngIf="game.dealer.length">
+                <span *ngIf="visibleDealerCards() > 0">
                     {{
-                    game.phase === 'playing' ||
-                    game.phase === 'insurance'
+                    dealerHoleHidden()
                     ? '?'
-                    : total(game.dealer)
+                    : total(
+                    game.dealer.slice(0, visibleDealerCards())
+                    )
                     }}
                 </span>
             </div>
 
             <div class="cards">
-                <div class="card" *ngFor="let card of game.dealer; let i = index" [class.red]="red(card) && !(
-            i === 1 &&
-            (game.phase === 'playing' || game.phase === 'insurance') )" [class.hidden]=" i === 1 &&
-            (game.phase === 'playing' || game.phase === 'insurance')
-        ">
-                    {{
-                    i === 1 &&
-                    (game.phase === 'playing' || game.phase === 'insurance')
-                    ? '♠'
-                    : card.rank + card.suit
-                    }}
-                </div>
+
+                <ng-container *ngFor="let card of game.dealer; let i = index">
+
+                    <div class="card" *ngIf="i < visibleDealerCards()" [class.red]="
+              red(card) &&
+              !(i === 1 && dealerHoleHidden())
+            " [class.hidden]="
+              i === 1 && dealerHoleHidden()
+            ">
+
+                        {{
+                        i === 1 && dealerHoleHidden()
+                        ? '♠'
+                        : card.rank + card.suit
+                        }}
+
+                    </div>
+
+                </ng-container>
+
             </div>
         </div>
 
         <!-- MITTE -->
-        <div class="center">
-            <div class="chip">{{ game.bet }}</div>
-            <div class="status">
-                {{ game.message }}
-                <div style="color: #ffdd55; margin-top: 8px;">
-                    DEBUG PHASE: {{ game.phase }}
-                </div>
-            </div>
-        </div>
+        <div class="center table-center">
 
+            <!-- REALISTISCHER CHIP-STAPEL -->
+            <div class="table-bet">
+
+                <div class="chip-tower">
+
+                    <div *ngFor="let value of getTableChips(); let i = index" class="tower-chip"
+                        [ngClass]="'tower-chip-' + value" [style.bottom.px]="i * 10" [style.z-index]="i + 1">
+
+                        <span>{{ value }}</span>
+
+                    </div>
+
+                </div>
+
+                <div class="table-bet-total">
+                    {{ getTableBet() }} Chips
+                </div>
+
+            </div>
+
+
+
+
+
+            <!-- RUNDENERGEBNIS -->
+            <div class="round-result" *ngIf="showRoundResult() && game.phase === 'finished'">
+
+                <ng-container *ngIf="game.hands.length === 1">
+
+                    <div class="result-title" [ngClass]="getResultClass(game.hands[0].result)">
+
+                        {{ getResultTitle(game.hands[0].result) }}
+
+                    </div>
+
+                    <div class="result-amount" [ngClass]="getResultClass(game.hands[0].result)">
+
+                        {{ getNetWin(game.hands[0].result, game.hands[0].bet) > 0 ? '+' : '' }}
+                        {{ getNetWin(game.hands[0].result, game.hands[0].bet) | number:'1.0-1' }} ●
+
+                    </div>
+
+                </ng-container>
+
+                <!-- SPLIT: GESAMTERGEBNIS -->
+                <ng-container *ngIf="game.hands.length > 1">
+
+                    <div class="result-title result-mixed">
+                        RUNDENERGEBNIS
+                    </div>
+
+                    <div class="result-amount" [class.result-win]="getTotalNetWin() > 0"
+                        [class.result-lose]="getTotalNetWin() < 0" [class.result-push]="getTotalNetWin() === 0">
+
+                        {{ getTotalNetWin() > 0 ? '+' : '' }}
+                        {{ getTotalNetWin() | number:'1.0-1' }} ●
+
+                    </div>
+
+                </ng-container>
+
+            </div>
+
+
+        </div>
 
         <!-- SPIELERHÄNDE -->
         <div class="player-hands">
 
             <div class="hand" *ngFor="let hand of game.hands; let i = index" [class.active-hand]="
-      game.phase === 'playing' &&
-      game.activeHandIndex === i
-    ">
+          !isDealing() &&
+          game.phase === 'playing' &&
+          game.activeHandIndex === i
+        ">
 
                 <div class="hand-title">
                     HAND {{ i + 1 }}
 
-                    <span>{{ total(hand.cards) }}</span>
-                </div>
+                    <span *ngIf="(visiblePlayerCards()[i] ?? 0) > 0">
 
-                <div class="cards">
-                    <div class="card" *ngFor="let card of hand.cards" [class.red]="red(card)">
+                        {{
+                        total(
+                        hand.cards.slice(
+                        0,
+                        visiblePlayerCards()[i] ?? 0
+                        )
+                        )
+                        }}
 
-                        {{ card.rank }}{{ card.suit }}
-                    </div>
-                </div>
-
-                <div class="hand-info">
-                    Einsatz: {{ hand.bet }} ●
-
-                    <span *ngIf="hand.result">
-                        · {{ hand.result }}
                     </span>
                 </div>
 
+                <div class="cards">
+
+                    <ng-container *ngFor="let card of hand.cards; let j = index">
+
+                        <div class="card" *ngIf="
+                j < (visiblePlayerCards()[i] ?? 0)
+              " [class.red]="red(card)">
+
+                            {{ card.rank }}{{ card.suit }}
+
+                        </div>
+
+                    </ng-container>
+
+                </div>
+
+
+                <div class="hand-info">
+                    Einsatz: {{ hand.bet }} ●
+                </div>
+
+                <!-- INDIVIDUELLES HAND-ERGEBNIS -->
+                <div class="hand-result" *ngIf="showRoundResult() && hand.result && game.hands.length > 1"
+                    [ngClass]="getResultClass(hand.result)">
+
+                    <strong>
+                        {{ getResultTitle(hand.result) }}
+                    </strong>
+
+                    <span>
+                        {{ getNetWin(hand.result, hand.bet) > 0 ? '+' : '' }}
+                        {{ getNetWin(hand.result, hand.bet) | number:'1.0-1' }} ●
+                    </span>
+
+                </div>
+
+
             </div>
-
         </div>
-
 
     </section>
 
     <!-- SPIELSTEUERUNG -->
     <section class="controls">
 
-        <div class="betrow">
-            <label>Einsatz</label>
 
-            <button (click)="changeBet(-10)" [disabled]="game.phase === 'playing'">
-                −
+        <!-- CASINO CHIPS -->
+        <div class="betting-area">
+
+            <div class="bet-label">DEIN EINSATZ</div>
+
+            <div class="bet-amount">
+                {{ game.bet }} ●
+            </div>
+
+            <div class="casino-chips">
+
+                <button *ngFor="let value of [1, 5, 10, 25, 50, 100]" type="button" class="casino-chip"
+                    [ngClass]="'chip-' + value" (click)="addChip(value)" [disabled]="
+        isDealing() ||
+        (game.phase !== 'betting' &&
+         game.phase !== 'finished') ||
+        game.bet + value > game.balance">
+                    {{ value }}
+                </button>
+
+            </div>
+
+            <button type="button" class="clear-bet" (click)="clearBet()" [disabled]="
+      isDealing() ||
+      (game.phase !== 'betting' &&
+       game.phase !== 'finished')">
+                ↺ Einsatz löschen
             </button>
 
-            <strong>{{ game.bet }} ●</strong>
-
-            <button (click)="changeBet(10)" [disabled]="game.phase === 'playing'">
-                +
-            </button>
         </div>
 
 
-        <div class="insurance-panel" *ngIf="game.phase === 'insurance'">
+        <!-- INSURANCE -->
+        <div class="insurance-panel" *ngIf="
+        game.phase === 'insurance' &&
+        !isDealing()
+      ">
 
             <h3>INSURANCE</h3>
 
@@ -139,51 +260,103 @@
 
             <p>
                 Versicherungseinsatz:
-                <strong>{{ game.insuranceCost }} ●</strong>
+                <strong>
+                    {{ game.insuranceCost }} ●
+                </strong>
             </p>
 
             <div class="insurance-actions">
-                <button class="gold" (click)="takeInsurance()" [disabled]="!game.canInsure">
+
+                <button type="button" class="gold" (click)="takeInsurance()" [disabled]="
+            isDealing() || !game.canInsure
+          ">
+
                     INSURANCE NEHMEN
+
                 </button>
 
-                <button (click)="declineInsurance()">
+                <button type="button" (click)="declineInsurance()" [disabled]="isDealing()">
+
                     ABLEHNEN
+
                 </button>
+
             </div>
         </div>
 
+        <!-- SPIELAKTIONEN -->
         <div class="actions">
 
-            <button class="gold" (click)="start()" [disabled]="
-        game.phase !== 'betting' &&
-        game.phase !== 'finished'
-    ">
+            <!-- KARTEN GEBEN -->
+            <button type="button" class="gold" (click)="start()" [disabled]="
+          isDealing() ||
+          (
+            game.phase !== 'betting' &&
+            game.phase !== 'finished'
+          )
+        ">
+
                 {{
-                game.phase === 'finished'
+                isDealing()
+                ? 'KARTEN WERDEN GEGEBEN ...'
+                : game.phase === 'finished'
                 ? 'NÄCHSTE RUNDE'
                 : 'KARTEN GEBEN'
                 }}
+
             </button>
 
-            <button type="button" (click)="hit()" [disabled]="game.phase !== 'playing'"
-                [style.opacity]="game.phase === 'playing' ? '1' : '0.35'">
+            <!-- HIT -->
+            <button type="button" (click)="hit()" [disabled]="
+          isDealing() ||
+          game.phase !== 'playing' ||
+          !game.activeHand ||
+          game.activeHand.finished ||
+          game.activeHand.splitAces
+        " [style.opacity]="
+          !isDealing() &&
+          game.phase === 'playing' &&
+          game.activeHand &&
+          !game.activeHand.finished &&
+          !game.activeHand.splitAces
+            ? '1'
+            : '0.35'
+        ">
+
                 HIT
+
             </button>
 
+            <!-- SPLIT -->
+            <button type="button" (click)="split()" [disabled]="
+          isDealing() ||
+          !game.canSplit
+        ">
 
-            <button (click)="split()" [disabled]="!game.canSplit">
                 SPLIT
+
             </button>
 
+            <!-- STAND -->
+            <button type="button" (click)="stand()" [disabled]="
+          isDealing() ||
+          game.phase !== 'playing' ||
+          !game.activeHand ||
+          game.activeHand.finished
+        ">
 
-            <button type="button" (click)="stand()"
-                [disabled]="game.phase !== 'playing' || !game.activeHand || game.activeHand.finished">
                 STAND
+
             </button>
 
-            <button (click)="doubleDown()" [disabled]="!game.canDouble">
+            <!-- DOUBLE -->
+            <button type="button" (click)="doubleDown()" [disabled]="
+          isDealing() ||
+          !game.canDouble
+        ">
+
                 DOUBLE
+
             </button>
 
         </div>
@@ -199,8 +372,10 @@
                 6 Decks · S17 · Virtuelle Chips
             </span>
 
-            <button class="link" (click)="reset()">
+            <button type="button" class="link" (click)="reset()" [disabled]="isDealing()">
+
                 Guthaben zurücksetzen
+
             </button>
 
         </div>
