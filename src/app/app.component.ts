@@ -2,17 +2,49 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { BlackjackEngine, Card, score } from './game.engine';
+import { GameStatsService } from './game-stats.service';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { GameSoundService } from './game-sound.service';
+
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
   private readonly cdr = inject(ChangeDetectorRef);
+  readonly transloco = inject(TranslocoService);
+  readonly sound = inject(GameSoundService);
+  readonly currentLanguage = signal(
+    localStorage.getItem('blackjack-pro-language') ?? 'de'
+  );
+  betHistory: number[] = [];
+
+
+
+  constructor() {
+    this.transloco.setActiveLang(this.currentLanguage());
+    document.documentElement.lang = this.currentLanguage();
+    document.documentElement.dir =
+      this.currentLanguage() === 'ar' ? 'rtl' : 'ltr';
+  }
+
+  changeLanguage(language: string): void {
+    if (!['de', 'en', 'ar'].includes(language)) return;
+
+    this.currentLanguage.set(language);
+    this.transloco.setActiveLang(language);
+
+    localStorage.setItem('blackjack-pro-language', language);
+
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }
   game = new BlackjackEngine();
+  displayBalance = signal(this.game.balance);
 
   isDealing = signal(false);
   showRoundResult = signal(false);
@@ -20,6 +52,12 @@ export class AppComponent {
   visiblePlayerCards = signal<number[]>([]);
   private readonly dealDelay = 650;
   dealerHoleHidden = signal(true);
+
+  showStats = signal(false);
+
+  readonly gameStats = inject(GameStatsService);
+
+  private roundRecorded = false;
 
   private syncVisibleCards(): void {
     // Alle aktuellen Spielerkarten anzeigen
@@ -54,13 +92,13 @@ export class AppComponent {
   getResultTitle(result: string | null): string {
     switch (result) {
       case 'win':
-        return 'YOU WIN!';
+        return this.transloco.translate('results.win');
       case 'lose':
-        return 'YOU LOSE';
+        return this.transloco.translate('results.lose');
       case 'push':
-        return 'PUSH';
+        return this.transloco.translate('results.push');
       case 'blackjack':
-        return 'BLACKJACK!';
+        return this.transloco.translate('results.blackjack');
       default:
         return '';
     }
@@ -143,6 +181,7 @@ export class AppComponent {
 
 
       this.visibleDealerCards.set(count);
+      this.sound.play('card');
 
       await this.sleep(1000);
     }
@@ -150,10 +189,20 @@ export class AppComponent {
     this.finishResultDisplay();
   }
 
+
   private finishResultDisplay(): void {
-    this.showRoundResult.set(
-      this.game.phase === 'finished'
-    );
+    const finished = this.game.phase === 'finished';
+
+    if (!finished || this.roundRecorded) return;
+
+    // Auszahlung erst nach der Dealer-Animation anzeigen
+    this.displayBalance.set(this.game.balance);
+    this.showRoundResult.set(true);
+
+    this.gameStats.recordRound(this.game);
+    this.roundRecorded = true;
+
+    this.playResultSound();
   }
 
 
@@ -189,29 +238,61 @@ export class AppComponent {
     this.visiblePlayerCards.set([0]);
 
     try {
+
+
+      const previousHands = this.game.hands;
+      const balanceBefore = this.game.balance;
+
       this.game.start();
 
+      // Nur den Einsatz abziehen, noch keinen Gewinn anzeigen
+      if (this.game.hands !== previousHands) {
+        this.displayBalance.set(balanceBefore - this.game.bet);
+      }
+
+
+      // Keine neue Runde gestartet?
+      if (this.game.hands === previousHands) {
+        this.visiblePlayerCards.set(
+          this.game.hands.map(hand => hand.cards.length)
+        );
+
+        this.visibleDealerCards.set(this.game.dealer.length);
+        this.dealerHoleHidden.set(false);
+
+        return;
+      }
+
+      // Neue Runde wurde erfolgreich gestartet
+      this.roundRecorded = false;
+      this.betHistory = [];
       this.visiblePlayerCards.set([1]);
+      this.sound.play('card');
       await this.sleep(this.dealDelay);
 
       this.visibleDealerCards.set(1);
+      this.sound.play('card');
       await this.sleep(this.dealDelay);
 
       this.visiblePlayerCards.set([2]);
+      this.sound.play('card');
       await this.sleep(this.dealDelay);
 
       this.visibleDealerCards.set(2);
+      this.sound.play('card');
       await this.sleep(this.dealDelay);
+
 
     } finally {
       this.visiblePlayerCards.set(
         this.game.hands.map(hand => hand.cards.length)
       );
 
-      this.isDealing.set(false);
-      if (this.game.phase === 'finished') {
-        this.finishResultDisplay();
+      if (this.game.phase === 'finished' && !this.roundRecorded) {
+        await this.revealDealerAnimated();
       }
+
+      this.isDealing.set(false);
     }
   }
 
@@ -237,7 +318,8 @@ export class AppComponent {
 
         return updated;
       });
-
+      // Sound beim Anzeigen der neuen Karte
+      this.sound.play('card');
       await this.animateHandTransition(handIndex);
 
     } finally {
@@ -245,20 +327,22 @@ export class AppComponent {
     }
   }
 
+
   async split(): Promise<void> {
-    if (this.isDealing() || !this.game.canSplit) {
-      return;
-    }
+    if (this.isDealing() || !this.game.canSplit) return;
+
+    const handIndex = this.game.activeHandIndex;
+    const additionalBet = this.game.activeHand!.bet;
 
     this.isDealing.set(true);
 
     try {
-      const handIndex = this.game.activeHandIndex;
-
       this.game.split();
 
-      // Beide Split-Hände zunächst mit einer Karte anzeigen.
-      // Bereits vorhandene andere Hände bleiben unverändert.
+      // Zusätzlichen Einsatz sofort vom sichtbaren Guthaben abziehen
+      this.displayBalance.update(balance => balance - additionalBet);
+
+      // Beide Split-Hände zunächst mit je einer Karte anzeigen
       this.visiblePlayerCards.set(
         this.game.hands.map((hand, index) =>
           index === handIndex || index === handIndex + 1
@@ -267,17 +351,17 @@ export class AppComponent {
         )
       );
 
-      // Zusatzkarte für die aktuelle Hand
+      // Zusatzkarte für die erste Hand
       await this.sleep(this.dealDelay);
 
       this.visiblePlayerCards.update(cards => {
         const updated = [...cards];
-
         updated[handIndex] =
           this.game.hands[handIndex]?.cards.length ?? 0;
-
         return updated;
       });
+
+      this.sound.play('card');
 
       await this.animateHandTransition(handIndex);
 
@@ -285,6 +369,7 @@ export class AppComponent {
       this.isDealing.set(false);
     }
   }
+
 
   private async animateHandTransition(
     previousHandIndex: number
@@ -295,7 +380,6 @@ export class AppComponent {
     // Keine Animation, wenn die Runde bereits beendet ist
     if (this.isGameFinished()) {
       await this.revealDealerAnimated();
-      this.finishResultDisplay();
       return;
     }
 
@@ -308,6 +392,7 @@ export class AppComponent {
         updated[nextHandIndex] = 1;
         return updated;
       });
+      this.sound.play('card');
 
       await this.sleep(this.dealDelay);
 
@@ -324,8 +409,17 @@ export class AppComponent {
   }
 
 
+  private playResultSound(): void {
+    const results = this.game.hands.map(hand => hand.result);
 
-
+    if (results.includes('blackjack')) {
+      this.sound.play('blackjack');
+    } else if (results.includes('win')) {
+      this.sound.play('win');
+    } else if (results.includes('lose')) {
+      this.sound.play('lose');
+    }
+  }
 
   async takeInsurance(): Promise<void> {
     if (this.isDealing() || this.game.phase !== 'insurance') {
@@ -401,20 +495,21 @@ export class AppComponent {
   }
 
 
-
   async doubleDown(): Promise<void> {
-    if (this.isDealing() || !this.game.canDouble) {
-      return;
-    }
+    if (this.isDealing() || !this.game.canDouble) return;
 
     const handIndex = this.game.activeHandIndex;
+    const additionalBet = this.game.activeHand!.bet;
 
     this.isDealing.set(true);
 
     try {
       this.game.doubleDown();
 
-      // Die zusätzliche Spielerkarte einzeln anzeigen
+      // Nur den zusätzlichen Einsatz abziehen.
+      // Einen möglichen Gewinn noch nicht anzeigen.
+      this.displayBalance.update(balance => balance - additionalBet);
+
       await this.sleep(this.dealDelay);
 
       this.visiblePlayerCards.update(cards => {
@@ -424,10 +519,10 @@ export class AppComponent {
         return updated;
       });
 
-      // Dealer spielt, falls die Runde abgeschlossen ist
-      if (this.isGameFinished()) {
-        await this.revealDealerAnimated();
-      }
+      this.sound.play('card');
+
+      // Auch nach Double Down kann eine weitere Split-Hand folgen.
+      await this.animateHandTransition(handIndex);
 
     } finally {
       this.isDealing.set(false);
@@ -435,34 +530,58 @@ export class AppComponent {
   }
 
 
+
   reset(): void {
+    if (this.isDealing()) return;
+
     this.game.resetBankroll();
+    this.displayBalance.set(this.game.balance);
+
+    this.visiblePlayerCards.set([]);
+    this.visibleDealerCards.set(0);
+    this.dealerHoleHidden.set(true);
+    this.showRoundResult.set(false);
+    this.roundRecorded = false;
   }
 
 
+  private canEditBet(): boolean {
+    return !this.isDealing() &&
+      (this.game.phase === 'betting' ||
+        this.game.phase === 'finished');
+  }
+
   addChip(value: number): void {
-    if (this.isDealing()) return;
+    if (!this.canEditBet()) return;
+    if (value <= 0 || this.game.bet + value > this.game.balance) return;
 
-    if (
-      this.game.phase !== 'betting' &&
-      this.game.phase !== 'finished'
-    ) return;
+    this.betHistory.push(this.game.bet);
+    this.game.bet += value;
+    this.sound.play('chip');
+  }
 
-    this.game.bet = Math.min(
-      this.game.balance,
-      this.game.bet + value
-    );
+  undoChip(): void {
+    if (!this.canEditBet() || this.betHistory.length === 0) return;
+
+    this.game.bet = this.betHistory.pop()!;
+    this.sound.play('chip');
   }
 
   clearBet(): void {
-    if (this.isDealing()) return;
+    if (!this.canEditBet() || this.game.bet === 0) return;
 
-    if (
-      this.game.phase !== 'betting' &&
-      this.game.phase !== 'finished'
-    ) return;
-
+    this.betHistory.push(this.game.bet);
     this.game.bet = 0;
+    this.sound.play('chip');
+  }
+
+  maxBet(): void {
+    if (!this.canEditBet()) return;
+    if (this.game.balance <= 0 || this.game.bet === this.game.balance) return;
+
+    this.betHistory.push(this.game.bet);
+    this.game.bet = this.game.balance;
+    this.sound.play('chip');
   }
 
 

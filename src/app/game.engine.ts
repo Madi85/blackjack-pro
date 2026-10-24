@@ -133,10 +133,12 @@ export class BlackjackEngine {
     hand.cards.push(this.draw());
     if (score(hand.cards).total >= 21) this.finishHand();
   }
+  
   stand(): void {
     if (this.phase !== 'playing' || !this.activeHand || this.activeHand.finished) return;
     this.finishHand();
   }
+
   doubleDown(): void {
     if (!this.canDouble) return;
     const hand = this.activeHand!;

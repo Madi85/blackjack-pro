@@ -8,204 +8,247 @@
 
         <div class="bank">
             Guthaben
-            <strong>{{ game.balance | number:'1.0-1' }} ●</strong>
+            <strong>{{ displayBalance() | number:'1.0-0' }} ●</strong>
         </div>
+        <button type="button" class="sound-toggle" (click)="sound.toggle()"
+            [attr.aria-label]="sound.enabled() ? 'Sound ausschalten' : 'Sound einschalten'">
+            {{ sound.enabled() ? '🔊' : '🔇' }}
+        </button>
     </header>
+
+    <!-- SPRACHAUSWAHL -->
+    <div class="language-switcher">
+        <button type="button" [class.active]="currentLanguage() === 'de'" (click)="changeLanguage('de')">
+            🇩🇪 DE
+        </button>
+
+        <button type="button" [class.active]="currentLanguage() === 'en'" (click)="changeLanguage('en')">
+            🇬🇧 EN
+        </button>
+
+        <button type="button" [class.active]="currentLanguage() === 'ar'" (click)="changeLanguage('ar')">
+            🇸🇦 AR
+        </button>
+    </div>
 
     <!-- SPIELMODUS -->
     <nav>
         <button type="button" [class.selected]="mode() === 'casino'" (click)="mode.set('casino')">
-            ♣ Casino
+            ♣ {{ 'game.casino' | transloco }}
         </button>
 
         <button type="button" [class.selected]="mode() === 'training'" (click)="mode.set('training')">
-            ♙ Training
+            ♙ {{ 'game.training' | transloco }}
         </button>
     </nav>
-
+  
     <!-- CASINO TISCH -->
+
+    <!-- STATISTIK BUTTON -->
+    <div class="stats-toolbar">
+        <button type="button" class="stats-toggle" (click)="showStats.set(!showStats())">
+            📊 {{ (showStats() ? 'stats.hide' : 'stats.show') | transloco }}
+        </button>
+    </div>
+
+    <!-- STATISTIK ANZEIGE -->
+    <section class="stats-dashboard" *ngIf="showStats()">
+        <h2>♠ {{ 'stats.title' | transloco }}</h2>
+
+        <p>
+            {{ 'stats.rounds' | transloco }}:
+            {{ gameStats.stats().rounds }}
+        </p>
+        <p>
+            {{ 'stats.won' | transloco }}:
+            {{ gameStats.stats().handsWon }}
+        </p>
+        <p>
+            {{ 'stats.lost' | transloco }}:
+            {{ gameStats.stats().handsLost }}
+        </p>
+        <p>
+            {{ 'stats.push' | transloco }}:
+            {{ gameStats.stats().handsPushed }}
+        </p>
+        <p>
+            {{ 'stats.blackjacks' | transloco }}:
+            {{ gameStats.stats().blackjacks }}
+        </p>
+        <p>
+            {{ 'stats.winRate' | transloco }}:
+            {{ gameStats.winRate | number:'1.1-1' }} %
+        </p>
+        <p>
+            {{ 'stats.profit' | transloco }}:
+            {{ gameStats.stats().netProfit }} ●
+        </p>
+
+        <button type="button" (click)="gameStats.resetStats()">
+            ↺ {{ 'stats.reset' | transloco }}
+        </button>
+    </section>
     <section class="table">
 
         <div class="table-label">
             BLACKJACK PAYS 3 TO 2
             <small>DEALER STANDS ON ALL 17</small>
         </div>
+        @if (game.balance <= 0 && game.phase==='finished' && !isDealing()) { <div class="no-balance-message">
+            <div class="no-balance-icon">🪙</div>
 
-        <!-- DEALER -->
-        <div class="hand">
+            <h3>{{ 'noBalance.title' | transloco }}</h3>
 
-            <div class="hand-title">
-                DEALER
+            <p>{{ 'noBalance.message' | transloco }}</p>
 
-                <span *ngIf="visibleDealerCards() > 0">
-                    {{
-                    dealerHoleHidden()
-                    ? '?'
-                    : total(
-                    game.dealer.slice(0, visibleDealerCards())
-                    )
-                    }}
-                </span>
+            <button type="button" class="new-balance-button" (click)="reset()">
+                {{ 'noBalance.resetButton' | transloco }}
+            </button>
             </div>
+            }
 
-            <div class="cards">
-
-                <ng-container *ngFor="let card of game.dealer; let i = index">
-
-                    <div class="card" *ngIf="i < visibleDealerCards()" [class.red]="
-              red(card) &&
-              !(i === 1 && dealerHoleHidden())
-            " [class.hidden]="
-              i === 1 && dealerHoleHidden()
-            ">
-
-                        {{
-                        i === 1 && dealerHoleHidden()
-                        ? '♠'
-                        : card.rank + card.suit
-                        }}
-
-                    </div>
-
-                </ng-container>
-
-            </div>
-        </div>
-
-        <!-- MITTE -->
-        <div class="center table-center">
-
-            <!-- REALISTISCHER CHIP-STAPEL -->
-            <div class="table-bet">
-
-                <div class="chip-tower">
-
-                    <div *ngFor="let value of getTableChips(); let i = index" class="tower-chip"
-                        [ngClass]="'tower-chip-' + value" [style.bottom.px]="i * 10" [style.z-index]="i + 1">
-
-                        <span>{{ value }}</span>
-
-                    </div>
-
-                </div>
-
-                <div class="table-bet-total">
-                    {{ getTableBet() }} Chips
-                </div>
-
-            </div>
-
-
-
-
-
-            <!-- RUNDENERGEBNIS -->
-            <div class="round-result" *ngIf="showRoundResult() && game.phase === 'finished'">
-
-                <ng-container *ngIf="game.hands.length === 1">
-
-                    <div class="result-title" [ngClass]="getResultClass(game.hands[0].result)">
-
-                        {{ getResultTitle(game.hands[0].result) }}
-
-                    </div>
-
-                    <div class="result-amount" [ngClass]="getResultClass(game.hands[0].result)">
-
-                        {{ getNetWin(game.hands[0].result, game.hands[0].bet) > 0 ? '+' : '' }}
-                        {{ getNetWin(game.hands[0].result, game.hands[0].bet) | number:'1.0-1' }} ●
-
-                    </div>
-
-                </ng-container>
-
-                <!-- SPLIT: GESAMTERGEBNIS -->
-                <ng-container *ngIf="game.hands.length > 1">
-
-                    <div class="result-title result-mixed">
-                        RUNDENERGEBNIS
-                    </div>
-
-                    <div class="result-amount" [class.result-win]="getTotalNetWin() > 0"
-                        [class.result-lose]="getTotalNetWin() < 0" [class.result-push]="getTotalNetWin() === 0">
-
-                        {{ getTotalNetWin() > 0 ? '+' : '' }}
-                        {{ getTotalNetWin() | number:'1.0-1' }} ●
-
-                    </div>
-
-                </ng-container>
-
-            </div>
-
-
-        </div>
-
-        <!-- SPIELERHÄNDE -->
-        <div class="player-hands">
-
-            <div class="hand" *ngFor="let hand of game.hands; let i = index" [class.active-hand]="
-          !isDealing() &&
-          game.phase === 'playing' &&
-          game.activeHandIndex === i
-        ">
+            <!-- DEALER -->
+            <div class="hand">
 
                 <div class="hand-title">
-                    HAND {{ i + 1 }}
+                    {{ 'table.dealer' | transloco }}
 
-                    <span *ngIf="(visiblePlayerCards()[i] ?? 0) > 0">
-
+                    <span *ngIf="visibleDealerCards() > 0">
                         {{
-                        total(
-                        hand.cards.slice(
-                        0,
-                        visiblePlayerCards()[i] ?? 0
-                        )
-                        )
+                        dealerHoleHidden()
+                        ? '?'
+                        : total(game.dealer.slice(0, visibleDealerCards()))
                         }}
-
                     </span>
                 </div>
 
                 <div class="cards">
 
-                    <ng-container *ngFor="let card of hand.cards; let j = index">
+                    <ng-container *ngFor="let card of game.dealer; let i = index">
 
-                        <div class="card" *ngIf="
-                j < (visiblePlayerCards()[i] ?? 0)
-              " [class.red]="red(card)">
+                        <div class="card" *ngIf="i < visibleDealerCards()"
+                            [class.red]="red(card) && !(i === 1 && dealerHoleHidden())     "
+                            [class.hidden]="  i === 1 && dealerHoleHidden()    ">
 
-                            {{ card.rank }}{{ card.suit }}
+                            {{ i === 1 && dealerHoleHidden() ? '♠' : card.rank + card.suit}}
 
                         </div>
 
                     </ng-container>
 
                 </div>
-
-
-                <div class="hand-info">
-                    Einsatz: {{ hand.bet }} ●
-                </div>
-
-                <!-- INDIVIDUELLES HAND-ERGEBNIS -->
-                <div class="hand-result" *ngIf="showRoundResult() && hand.result && game.hands.length > 1"
-                    [ngClass]="getResultClass(hand.result)">
-
-                    <strong>
-                        {{ getResultTitle(hand.result) }}
-                    </strong>
-
-                    <span>
-                        {{ getNetWin(hand.result, hand.bet) > 0 ? '+' : '' }}
-                        {{ getNetWin(hand.result, hand.bet) | number:'1.0-1' }} ●
-                    </span>
-
-                </div>
-
-
             </div>
-        </div>
+
+            <!-- MITTE -->
+            <div class="center table-center">
+
+                <!-- REALISTISCHER CHIP-STAPEL -->
+                <div class="table-bet">
+
+                    <div class="chip-tower">
+
+                        <div *ngFor="let value of getTableChips(); let i = index" class="tower-chip"
+                            [ngClass]="'tower-chip-' + value" [style.bottom.px]="i * 10" [style.z-index]="i + 1">
+
+                            <span>{{ value }}</span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="table-bet-total">
+                        {{ getTableBet() }} Chips
+                    </div>
+
+                </div>
+
+                <!-- RUNDENERGEBNIS -->
+                <div class="round-result" *ngIf="showRoundResult() && game.phase === 'finished'">
+
+                    <ng-container *ngIf="game.hands.length === 1">
+
+                        <div class="result-title" [ngClass]="getResultClass(game.hands[0].result)">
+
+                            {{ getResultTitle(game.hands[0].result) }}
+
+                        </div>
+                        <div class="result-amount" [ngClass]="getResultClass(game.hands[0].result)">
+
+                            {{ getNetWin(game.hands[0].result, game.hands[0].bet) > 0 ? '+' : '' }}
+                            {{ getNetWin(game.hands[0].result, game.hands[0].bet) | number:'1.0-1' }} ●
+
+                        </div>
+                    </ng-container>
+
+                    <!-- SPLIT: GESAMTERGEBNIS -->
+                    <ng-container *ngIf="game.hands.length > 1">
+
+                        <div class="result-title result-mixed">
+                            {{ 'table.roundResult' | transloco }}
+                        </div>
+
+                        <div class="result-amount" [class.result-win]="getTotalNetWin() > 0"
+                            [class.result-lose]="getTotalNetWin() < 0" [class.result-push]="getTotalNetWin() === 0">
+
+                            {{ getTotalNetWin() > 0 ? '+' : '' }}
+                            {{ getTotalNetWin() | number:'1.0-1' }} ●
+
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+
+            <!-- SPIELERHÄNDE -->
+            <div class="player-hands">
+
+                <div class="hand" *ngFor="let hand of game.hands; let i = index"
+                    [class.active-hand]=" !isDealing() && game.phase === 'playing' &&   game.activeHandIndex === i  ">
+
+                    <div class="hand-title">
+                        {{ 'table.hand' | transloco }} {{ i + 1 }}
+
+                        <span *ngIf="(visiblePlayerCards()[i] ?? 0) > 0">
+                            {{total(hand.cards.slice(0,visiblePlayerCards()[i]))}}
+                        </span>
+                    </div>
+
+                    <div class="cards">
+
+                        <ng-container *ngFor="let card of hand.cards; let j = index">
+
+                            <div class="card" *ngIf=" j < (visiblePlayerCards()[i] ?? 0)" [class.red]="red(card)">
+
+                                {{ card.rank }}{{ card.suit }}
+
+                            </div>
+
+                        </ng-container>
+
+                    </div>
+
+
+                    <div class="hand-info">
+                        {{ 'table.bet' | transloco }}: {{ hand.bet }} ●
+                    </div>
+
+                    <!-- INDIVIDUELLES HAND-ERGEBNIS -->
+                    <div class="hand-result" *ngIf="showRoundResult() && hand.result && game.hands.length > 1"
+                        [ngClass]="getResultClass(hand.result)">
+
+                        <strong>
+                            {{ getResultTitle(hand.result) }}
+                        </strong>
+
+                        <span>
+                            {{ getNetWin(hand.result, hand.bet) > 0 ? '+' : '' }}
+                            {{ getNetWin(hand.result, hand.bet) | number:'1.0-1' }} ●
+                        </span>
+
+                    </div>
+
+
+                </div>
+            </div>
 
     </section>
 
@@ -214,75 +257,86 @@
 
 
         <!-- CASINO CHIPS -->
+
+
         <div class="betting-area">
 
-            <div class="bet-label">DEIN EINSATZ</div>
+            <div class="betting-header">
+                <div>
+                    <div class="bet-label">
+                        {{ 'betting.title' | transloco }}
+                    </div>
 
-            <div class="bet-amount">
-                {{ game.bet }} ●
+                    <div class="bet-amount">
+                        {{ game.bet | number:'1.0-0' }} ●
+                    </div>
+                </div>
+
+                <div class="betting-balance">
+                    <span>{{ 'betting.balance' | transloco }}</span>
+                    <strong>{{ game.balance | number:'1.0-0' }} ●</strong>
+                </div>
             </div>
 
             <div class="casino-chips">
-
-                <button *ngFor="let value of [1, 5, 10, 25, 50, 100]" type="button" class="casino-chip"
-                    [ngClass]="'chip-' + value" (click)="addChip(value)" [disabled]="
-        isDealing() ||
-        (game.phase !== 'betting' &&
-         game.phase !== 'finished') ||
-        game.bet + value > game.balance">
-                    {{ value }}
+                <button *ngFor="let value of chipValues" type="button" class="casino-chip" [ngClass]="'chip-' + value"
+                    (click)="addChip(value)" [attr.aria-label]="value + ' Chips'"
+                    [disabled]=" isDealing() || (game.phase !== 'betting' &&  game.phase !== 'finished') || game.bet + value > game.balance">
+                    <span class="chip-inner">{{ value }}</span>
                 </button>
-
             </div>
 
-            <button type="button" class="clear-bet" (click)="clearBet()" [disabled]="
-      isDealing() ||
-      (game.phase !== 'betting' &&
-       game.phase !== 'finished')">
-                ↺ Einsatz löschen
-            </button>
+            <div class="bet-tools">
+                <button type="button" class="bet-tool" (click)="undoChip()"
+                    [disabled]=" isDealing() ||  (game.phase !== 'betting' &&   game.phase !== 'finished') || betHistory.length === 0 ">
+                    ↶ {{ 'betting.undo' | transloco }}
+                </button>
+
+                <button type="button" class="bet-tool" (click)="clearBet()"
+                    [disabled]="isDealing() || (game.phase !== 'betting' &&  game.phase !== 'finished') ||  game.bet === 0 ">
+                    ↺ {{ 'betting.clear' | transloco }}
+                </button>
+
+                <button type="button" class="bet-tool bet-tool-max" (click)="maxBet()"
+                    [disabled]=" isDealing() ||  (game.phase !== 'betting' && game.phase !== 'finished') || game.balance <= 0 || game.bet === game.balance ">
+                    {{ 'betting.max' | transloco }}
+                </button>
+            </div>
 
         </div>
 
-
         <!-- INSURANCE -->
-        <div class="insurance-panel" *ngIf="
-        game.phase === 'insurance' &&
-        !isDealing()
-      ">
 
-            <h3>INSURANCE</h3>
+        <div class="insurance-panel" *ngIf="game.phase === 'insurance' && !isDealing()">
 
-            <p>
-                Der Dealer zeigt ein Ass.
-                Möchtest du dich gegen Blackjack versichern?
-            </p>
+            <div class="insurance-heading">
+                <div class="insurance-title">
+                    <span class="insurance-symbol">♠</span>
+                    <h3>{{ 'insurance.title' | transloco }}</h3>
+                </div>
 
-            <p>
-                Versicherungseinsatz:
-                <strong>
-                    {{ game.insuranceCost }} ●
-                </strong>
+                <span class="insurance-cost">
+                    {{ game.insuranceCost | number:'1.0-0' }} ●
+                </span>
+            </div>
+
+            <p class="insurance-description">
+                {{ 'insurance.description' | transloco }}
             </p>
 
             <div class="insurance-actions">
-
-                <button type="button" class="gold" (click)="takeInsurance()" [disabled]="
-            isDealing() || !game.canInsure
-          ">
-
-                    INSURANCE NEHMEN
-
+                <button type="button" class="insurance-accept" (click)="takeInsurance()"
+                    [disabled]="isDealing() || !game.canInsure">
+                    {{ 'insurance.accept' | transloco }}
                 </button>
 
-                <button type="button" (click)="declineInsurance()" [disabled]="isDealing()">
-
-                    ABLEHNEN
-
+                <button type="button" class="insurance-decline" (click)="declineInsurance()" [disabled]="isDealing()">
+                    {{ 'insurance.decline' | transloco }}
                 </button>
-
             </div>
+
         </div>
+
 
         <!-- SPIELAKTIONEN -->
         <div class="actions">
@@ -297,11 +351,11 @@
         ">
 
                 {{
-                isDealing()
-                ? 'KARTEN WERDEN GEGEBEN ...'
+                (isDealing()
+                ? 'actions.dealing'
                 : game.phase === 'finished'
-                ? 'NÄCHSTE RUNDE'
-                : 'KARTEN GEBEN'
+                ? 'actions.nextRound'
+                : 'actions.deal') | transloco
                 }}
 
             </button>
@@ -323,7 +377,7 @@
             : '0.35'
         ">
 
-                HIT
+                {{ 'actions.hit' | transloco }}
 
             </button>
 
@@ -333,7 +387,7 @@
           !game.canSplit
         ">
 
-                SPLIT
+                {{ 'actions.split' | transloco }}
 
             </button>
 
@@ -345,7 +399,7 @@
           game.activeHand.finished
         ">
 
-                STAND
+                {{ 'actions.stand' | transloco }}
 
             </button>
 
@@ -355,7 +409,7 @@
           !game.canDouble
         ">
 
-                DOUBLE
+                {{ 'actions.double' | transloco }}
 
             </button>
 

@@ -1,0 +1,61 @@
+{
+  "game": {
+    "balance": "Guthaben",
+    "casino": "Casino",
+    "training": "Training"
+  },
+  "stats": {
+    "show": "Statistik anzeigen",
+    "hide": "Statistik schließen",
+    "title": "Deine Spielstatistik",
+    "rounds": "Gespielte Runden",
+    "won": "Gewonnene Hände",
+    "lost": "Verlorene Hände",
+    "push": "Unentschieden",
+    "blackjacks": "Blackjacks",
+    "winRate": "Gewinnquote",
+    "profit": "Gewinn / Verlust",
+    "reset": "Statistik zurücksetzen"
+  },
+  "actions": {
+    "dealing": "KARTEN WERDEN GEGEBEN ...",
+    "nextRound": "NÄCHSTE RUNDE",
+    "deal": "KARTEN GEBEN",
+    "hit": "KARTE ZIEHEN",
+    "stand": "STEHEN",
+    "split": "TEILEN",
+    "double": "VERDOPPELN",
+    "clearBet": "Einsatz löschen",
+    "yourBet": "DEIN EINSATZ"
+  },
+  "table": {
+    "dealer": "DEALER",
+    "hand": "HAND",
+    "bet": "Einsatz",
+    "roundResult": "RUNDENERGEBNIS"
+  },
+  "results": {
+    "win": "DU GEWINNST!",
+    "lose": "DU VERLIERST",
+    "push": "UNENTSCHIEDEN",
+    "blackjack": "BLACKJACK!"
+  },
+  "noBalance": {
+    "title": "Kein Guthaben mehr!",
+    "message": "Du hast alle deine Chips verloren. Starte mit 1.000 neuen Chips.",
+    "resetButton": "Neues Guthaben"
+  },
+  "betting": {
+    "title": "DEIN EINSATZ",
+    "balance": "Balance",
+    "undo": "Rückgängig",
+    "clear": "Löschen",
+    "max": "MAX setzen"
+  },
+  "insurance": {
+    "title": "VERSICHERUNG",
+    "description": "Der Dealer zeigt ein Ass. Möchtest du eine Versicherung gegen Dealer-Blackjack?",
+    "accept": "Versicherung annehmen",
+    "decline": "Versicherung ablehnen"
+  }
+}

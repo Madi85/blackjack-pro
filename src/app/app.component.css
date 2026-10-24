@@ -515,3 +515,559 @@
     margin: 0 0 14px;
     padding: 0;
 }
+
+/* BLACKJACK PRO – STATISTIK */
+
+.stats-toolbar {
+    display: flex;
+    justify-content: center;
+    margin: 14px 0 20px;
+}
+
+.stats-toggle {
+    padding: 11px 24px;
+    border: 1px solid #c7a45a;
+    border-radius: 10px;
+    background: #172d2b;
+    color: #f0cf80;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:hover {
+        background: #25463f;
+        border-color: #f0cf80;
+    }
+}
+
+.stats-dashboard {
+    width: 100%;
+    max-width: 850px;
+    box-sizing: border-box;
+    margin: 0 auto 24px;
+    padding: 24px;
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 18px;
+    background: linear-gradient(145deg, #152b29, #0c1c1d);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.stats-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+
+    h2 {
+        margin: 0;
+        color: #e8c674;
+        font-size: 19px;
+    }
+
+    span {
+        color: #91aaa5;
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.stats-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    padding: 17px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+
+    span {
+        color: #b5c4c1;
+        font-size: 12px;
+    }
+
+    strong {
+        color: #fff;
+        font-size: 27px;
+    }
+
+    &.stats-win strong {
+        color: #64e7a0;
+    }
+
+    &.stats-loss strong {
+        color: #ff7979;
+    }
+
+    &.stats-gold strong {
+        color: #f0ce78;
+    }
+}
+
+.stats-profit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25);
+
+    span {
+        color: #c0cbc8;
+        font-size: 12px;
+        letter-spacing: 1px;
+    }
+
+    strong {
+        color: #fff;
+        font-size: 26px;
+
+        &.positive {
+            color: #64e7a0;
+        }
+
+        &.negative {
+            color: #ff7979;
+        }
+    }
+}
+
+.stats-reset {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 16px;
+    border: 1px solid #697d79;
+    border-radius: 8px;
+    background: transparent;
+    color: #bfcac7;
+    cursor: pointer;
+
+    &:hover {
+        color: #fff;
+        border-color: #e8c674;
+    }
+}
+
+@media (max-width: 650px) {
+    .stats-dashboard {
+        padding: 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats-heading {
+        flex-wrap: wrap;
+    }
+
+    .stats-profit {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.language-switcher button {
+    padding: 7px 11px;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 8px;
+    background: #102b26;
+    color: #e9d49a;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.language-switcher button.active {
+    background: #d4af37;
+    color: #102019;
+    border-color: #d4af37;
+}
+
+.language-switcher button:hover {
+    border-color: #f3d47c;
+}
+
+
+.no-balance-message {
+    margin: 20px auto;
+    padding: 24px;
+    max-width: 380px;
+    text-align: center;
+    border: 1px solid #c99a45;
+    border-radius: 16px;
+    background: rgba(20, 25, 30, 0.95);
+    color: white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.no-balance-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+
+.no-balance-message h3 {
+    color: #f0c36d;
+    margin-bottom: 10px;
+}
+
+.no-balance-message p {
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.new-balance-button {
+    padding: 12px 22px;
+    border: none;
+    border-radius: 10px;
+    background: #d4a449;
+    color: #171717;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.new-balance-button:hover {
+    background: #efc36c;
+}
+
+/* Hochwertigere Casino-Chips */
+.controls .casino-chips .casino-chip {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    min-width: 68px;
+    border: 7px dashed rgba(255, 255, 255, 0.9);
+    outline: 2px solid rgba(0, 0, 0, 0.3);
+    outline-offset: -12px;
+    box-shadow:
+        inset 0 3px 5px rgba(255, 255, 255, 0.28),
+        inset 0 -5px 8px rgba(0, 0, 0, 0.35),
+        0 5px 0 rgba(0, 0, 0, 0.55),
+        0 10px 18px rgba(0, 0, 0, 0.35);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.controls .casino-chips .casino-chip:hover:not(:disabled) {
+    transform: translateY(-6px) scale(1.06);
+}
+
+.controls .casino-chips .casino-chip:active:not(:disabled) {
+    transform: translateY(2px) scale(0.96);
+}
+
+.controls .casino-chips .casino-chip .chip-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.1);
+    font-weight: 900;
+}
+
+.controls .casino-chips .chip-1 .chip-inner {
+    color: #222;
+}
+
+/* Einsatz-Werkzeuge */
+.bet-tools {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.bet-tool {
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 10px;
+    background: #17372f;
+    color: #f1dfb0;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 150ms ease, transform 150ms ease;
+}
+
+.bet-tool:hover:not(:disabled) {
+    background: #245346;
+    transform: translateY(-2px);
+}
+
+.bet-tool-max {
+    background: #d4af37;
+    color: #15251e;
+    border-color: #d4af37;
+}
+
+.bet-tool-max:hover:not(:disabled) {
+    background: #f0cb60;
+}
+
+.bet-tool:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .controls .casino-chips .casino-chip {
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+    }
+
+    .bet-tool {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
+
+/* BETTING PANEL */
+
+.controls .betting-area {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px;
+    gap: 22px;
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    border-radius: 20px;
+    background: linear-gradient(145deg, #142b2b, #101e27);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+.betting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.betting-header .bet-label {
+    margin-bottom: 7px;
+}
+
+.betting-header .bet-amount {
+    font-size: 32px;
+    font-weight: 900;
+    text-align: left;
+}
+
+.betting-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 11px 16px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.045);
+    text-align: right;
+}
+
+.betting-balance span {
+    color: #a9bdb7;
+    font-size: 12px;
+}
+
+.betting-balance strong {
+    color: #f1d17a;
+    font-size: 17px;
+}
+
+/* CHIP ROW */
+
+.controls .casino-chips {
+    justify-content: center;
+    gap: 15px;
+}
+
+.controls .casino-chips .casino-chip {
+    box-shadow:
+        inset 0 3px 5px rgba(255, 255, 255, 0.25),
+        inset 0 -5px 7px rgba(0, 0, 0, 0.35),
+        0 5px 0 rgba(0, 0, 0, 0.45),
+        0 10px 18px rgba(0, 0, 0, 0.28);
+}
+
+.controls .casino-chips .casino-chip:disabled {
+    opacity: 0.65;
+    filter: saturate(0.75);
+}
+
+/* BETTING TOOLS */
+
+.bet-tools {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+}
+
+.bet-tool {
+    min-height: 44px;
+    padding: 11px 18px;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 11px;
+    background: #1c3b35;
+    color: #e9dbb6;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.bet-tool:hover:not(:disabled) {
+    background: #295447;
+}
+
+.bet-tool-max {
+    background: #d4af37;
+    border-color: #d4af37;
+    color: #14251f;
+}
+
+.bet-tool-max:hover:not(:disabled) {
+    background: #f1ce67;
+}
+
+.bet-tool:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* INSURANCE PANEL */
+
+.controls .insurance-panel {
+    width: 100%;
+    max-width: 760px;
+    box-sizing: border-box;
+    margin: 18px auto;
+    padding: 24px;
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 18px;
+    background: linear-gradient(145deg, #18352f, #101e27);
+    color: #f5f5f5;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.insurance-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.insurance-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.insurance-title h3 {
+    margin: 0;
+    color: #f0ce78;
+    font-size: 20px;
+}
+
+.insurance-symbol {
+    color: #f0ce78;
+    font-size: 25px;
+}
+
+.insurance-cost {
+    padding: 8px 12px;
+    border-radius: 9px;
+    background: rgba(212, 175, 55, 0.13);
+    color: #f0ce78;
+    font-weight: 800;
+}
+
+.insurance-description {
+    margin: 16px 0 22px;
+    color: #d6e0dc;
+    line-height: 1.6;
+}
+
+.insurance-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.insurance-actions button {
+    min-height: 48px;
+    padding: 12px;
+    border-radius: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.insurance-accept {
+    border: 1px solid #d4af37;
+    background: #d4af37;
+    color: #14251f;
+}
+
+.insurance-decline {
+    border: 1px solid #526a64;
+    background: #254039;
+    color: #f5f5f5;
+}
+
+.insurance-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+    .controls .betting-area,
+    .controls .insurance-panel {
+        padding: 16px;
+    }
+
+    .betting-header .bet-amount {
+        font-size: 25px;
+    }
+
+    .betting-balance {
+        padding: 9px;
+    }
+
+    .controls .casino-chips {
+        gap: 9px;
+    }
+
+    .bet-tools {
+        gap: 7px;
+    }
+
+    .bet-tool {
+        padding: 10px;
+        font-size: 12px;
+    }
+}

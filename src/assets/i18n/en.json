@@ -1,0 +1,61 @@
+{
+  "game": {
+    "balance": "Balance",
+    "casino": "Casino",
+    "training": "Training"
+  },
+  "stats": {
+    "show": "Show statistics",
+    "hide": "Close statistics",
+    "title": "Your game statistics",
+    "rounds": "Rounds played",
+    "won": "Hands won",
+    "lost": "Hands lost",
+    "push": "Pushes",
+    "blackjacks": "Blackjacks",
+    "winRate": "Win rate",
+    "profit": "Profit / Loss",
+    "reset": "Reset statistics"
+  },
+  "actions": {
+    "dealing": "DEALING CARDS ...",
+    "nextRound": "NEXT ROUND",
+    "deal": "DEAL CARDS",
+    "hit": "HIT",
+    "stand": "STAND",
+    "split": "SPLIT",
+    "double": "DOUBLE",
+    "clearBet": "Clear bet",
+    "yourBet": "YOUR BET"
+  },
+  "table": {
+    "dealer": "DEALER",
+    "hand": "HAND",
+    "bet": "Bet",
+    "roundResult": "ROUND RESULT"
+  },
+  "results": {
+    "win": "YOU WIN!",
+    "lose": "YOU LOSE",
+    "push": "PUSH",
+    "blackjack": "BLACKJACK!"
+  },
+  "noBalance": {
+    "title": "Out of chips!",
+    "message": "You've lost all your chips. Start again with 1,000 new chips.",
+    "resetButton": "New bankroll"
+  },
+  "betting": {
+    "title": "YOUR BET",
+    "balance": "Balance",
+    "undo": "Undo",
+    "clear": "Clear",
+    "max": "Bet MAX"
+  },
+  "insurance": {
+    "title": "INSURANCE",
+    "description": "The dealer is showing an Ace. Would you like insurance against dealer blackjack?",
+    "accept": "Take insurance",
+    "decline": "Decline"
+  }
+}
