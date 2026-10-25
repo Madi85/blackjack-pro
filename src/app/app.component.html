@@ -41,7 +41,7 @@
             ♙ {{ 'game.training' | transloco }}
         </button>
     </nav>
-  
+
     <!-- CASINO TISCH -->
 
     <!-- STATISTIK BUTTON -->
@@ -272,10 +272,12 @@
                     </div>
                 </div>
 
+
                 <div class="betting-balance">
                     <span>{{ 'betting.balance' | transloco }}</span>
-                    <strong>{{ game.balance | number:'1.0-0' }} ●</strong>
+                    <strong>{{ displayBalance() | number:'1.0-0' }} ●</strong>
                 </div>
+
             </div>
 
             <div class="casino-chips">

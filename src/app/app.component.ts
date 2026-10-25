@@ -160,34 +160,34 @@ export class AppComponent {
 
 
 
+
   private async revealDealerAnimated(): Promise<void> {
     const totalCards = this.game.dealer.length;
 
-    console.log('Dealer-Animation START', {
-      totalCards,
-      visibleBefore: this.visibleDealerCards()
-    });
-
+    // Zweite Dealer-Karte ist zunächst verdeckt
     this.visibleDealerCards.set(Math.min(2, totalCards));
 
     await this.sleep(650);
 
+    // Verdeckte Karte aufdecken
     this.dealerHoleHidden.set(false);
-    console.log('Dealer-Karte 2 aufgedeckt');
 
     await this.sleep(900);
 
+    // Weitere Dealer-Karten einzeln anzeigen
     for (let count = 3; count <= totalCards; count++) {
-
-
       this.visibleDealerCards.set(count);
       this.sound.play('card');
 
       await this.sleep(1000);
     }
 
+    // Erst nach der vollständigen Animation auszahlen
+    this.displayBalance.set(this.game.balance);
+
     this.finishResultDisplay();
   }
+
 
 
   private finishResultDisplay(): void {
